@@ -3,8 +3,8 @@ import {
   createStyles,
   Group,
   Image,
-  ThemeIcon,
-  useMantineTheme,
+  Select,
+  useMantineTheme, ActionIcon, UnstyledButton, useMantineColorScheme, Text, Modal, Container, Box
 } from "@mantine/core";
 import LogoLight from "../../../assets/logo/logo-light.svg";
 import LogoDark from "../../../assets/logo/logo-dark.svg";
@@ -12,8 +12,6 @@ import Discord from "../../../assets/icons/discord.svg";
 import GitHub from "../../../assets/icons/github.svg";
 import { useNavigate } from "react-router-dom";
 import { RoutePath } from "navigation/route-path";
-
-import { ActionIcon, Switch, useMantineColorScheme } from "@mantine/core";
 import {
   IconSun,
   IconMoonStars,
@@ -22,6 +20,8 @@ import {
 } from "@tabler/icons";
 
 import useRecoveryStore from "store/recovery/recovery.store";
+import { useState } from "react";
+import { NetworkUtil } from "utils/networks";
 
 const useStyles = createStyles((theme) => ({
   nav: {
@@ -95,16 +95,62 @@ const useStyles = createStyles((theme) => ({
 export const Navbar = () => {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
 
-  const { setCreateStep, setFormData } =
+  const { setCreateStep, setFormData, setChainId, chainId } =
   useRecoveryStore((state: any) => state);
   const theme = useMantineTheme();
   const dark = colorScheme === "dark";
 
   const { classes } = useStyles();
   const navigate = useNavigate();
+  const [open, setOpen] = useState(false);
 
   return (
     <nav className={classes.nav}>
+      <Modal
+        centered
+        opened={open}
+        onClose={() => setOpen(false)}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+        withCloseButton={false}
+        overlayOpacity={0.5}
+        size={320}
+      >
+        <Box radius="md" sx={{ padding: "20px" }} >
+          <Group>
+            <Container
+              sx={{
+                display: "flex",
+                alignItem: "center",
+                justifyContent: "center",
+                marginBottom: "20px",
+              }}
+            >
+            </Container>
+            <Text sx={{ textAlign: "center" }}>
+              {" "}
+
+            </Text>
+            <Select
+      label="Select the network"
+      placeholder="Pick one"
+      value={chainId}
+      onChange={setChainId} 
+      data={[
+        { value: 100, label: 'Gnosis Mainnet' },
+        { value: 137, label: 'Polygon Mainnet' },
+        { value: 84531, label: 'Base Testnet' },
+      ]}
+    />
+          </Group>
+          
+        </Box>
+      </Modal>
+      
+      
       <div className={classes.wrapper}>
         <div className={classes.maincontainer}>
           <Image
@@ -118,7 +164,16 @@ export const Navbar = () => {
             alt="Logo"
             width={"180px"}
           />
+          
           <Group className={classes.container}>
+
+          <UnstyledButton onClick={()=> setOpen(true)}>
+        <div>
+          <Text>{NetworkUtil.getNetworkById(chainId)?.name}</Text>
+          <Text size="xs" color="dimmed">{NetworkUtil.getNetworkById(chainId)?.type}</Text>
+        </div>
+    </UnstyledButton>
+          
             <ActionIcon
               className={classes.buttonContainer}
               // variant="filled"

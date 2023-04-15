@@ -25,12 +25,13 @@ import { RoutePath } from "navigation";
 import { LockedWallet } from "./components/locked-wallet.component";
 import { Activity } from "./components/activitity.component";
 import { ethers } from "ethers";
+import { NetworkUtil } from "utils/networks";
 
 export const VoucherDetailsScreen = () => {
   const { classes } = useStyles();
 
   const navigate = useNavigate();
-  const { accountDetails, fetching, setFetching, safeId } = useRecoveryStore((state: any) => state);
+  const { accountDetails, fetching, setFetching, safeId, chainId } = useRecoveryStore((state: any) => state);
   const [ balance, setBalance ] = useState('0');
 
 
@@ -75,7 +76,7 @@ export const VoucherDetailsScreen = () => {
                       borderRadius: "4px",
                     }}
                   >
-                    <Text color={"green"}> Base Goerli Testnet</Text>
+                    <Text color={"green"}> { `${NetworkUtil.getNetworkById(chainId)?.name} ${NetworkUtil.getNetworkById(chainId)?.type}` } </Text>
                   </Box>
                   <Group>
                     <IconBell
@@ -101,7 +102,7 @@ export const VoucherDetailsScreen = () => {
                         }
                       }
                       onClick={()=> window.open(
-                        `https://goerli.basescan.org/address/${safeId}`,
+                        `${NetworkUtil.getNetworkById(chainId)?.blockExplorer}/address/${safeId}`,
                         "_blank"
                       )}
                     >

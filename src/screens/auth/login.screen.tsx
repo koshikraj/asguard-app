@@ -37,12 +37,18 @@ import useRecoveryStore from "store/recovery/recovery.store";
 import AsguardHero from "../../assets/images/asguard-hero.svg";
 import { NetworkUtil } from "utils/networks";
 
-const RPC_URL='https://restless-young-layer.base-goerli.discover.quiknode.pro/3860a9e7a99900628604b143682330d4cec99db0'
+import MetaMaskSDK from '@metamask/sdk';
+
+import detectEthereumProvider from '@metamask/detect-provider';
 
 
-const txServiceUrl = 'https://safe-transaction-base-testnet.safe.global/'
+
+
+
 
 export function LoginScreen(props: any) {
+
+  
 
 
   
@@ -51,9 +57,11 @@ export function LoginScreen(props: any) {
   const [signingIn, setSigningIn] = useState(false);
   const [loginType, setLoginType] = useState("wallet");
 
-  const { setAccountDetails } = useRecoveryStore(
+  const { setAccountDetails, setChainId, chainId } = useRecoveryStore(
     (state: any) => state
   );
+
+  console.log(chainId)
 
   const [email, setEmail] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
@@ -70,10 +78,10 @@ export function LoginScreen(props: any) {
       await setSafeAuth(
         await SafeAuthKit.init(SafeAuthProviderType.Web3Auth, {
           
-          chainId: '0x' + NetworkUtil.getNetworkById(84531)?.chainId.toString(16),
-          txServiceUrl: txServiceUrl, // Optional. Only if want to retrieve related safes
+          chainId: '0x' + NetworkUtil.getNetworkById(chainId)?.chainId.toString(16),
+          txServiceUrl: NetworkUtil.getNetworkById(chainId)?.safeService , // Optional. Only if want to retrieve related safes
           authProviderConfig: {
-            rpcTarget: RPC_URL,
+            rpcTarget: NetworkUtil.getNetworkById(chainId)!.url,
             clientId: 'BAcCop_qaWVfw15peOnVq8xd8KefD3UvZ-3bKip0RNy0w1J0Z8ZKNNzWiFW97a66S-UGr-oZpzdk1hE8SwWmy00',
             network: 'testnet',
             theme: 'dark'
@@ -81,7 +89,7 @@ export function LoginScreen(props: any) {
         })
       )
     })()
-  }, [])
+  }, [chainId])
 
 
 
@@ -101,6 +109,15 @@ export function LoginScreen(props: any) {
 
     navigate(RoutePath.recovery)
   }
+
+  const handleWalletLogin = async () => {
+
+  const provider = await detectEthereumProvider();
+  const safeOwner = new ethers.providers.Web3Provider(provider as ethers.providers.ExternalProvider).getSigner(0)
+  setAccountDetails({provider: provider as SafeEventEmitterProvider, authResponse: {eoa: await safeOwner.getAddress()}})
+  navigate(RoutePath.recovery)
+  
+  };
 
 
 
@@ -192,7 +209,7 @@ export function LoginScreen(props: any) {
             </Box>
 
 
-          <Group position="apart" mt="xl">
+          {/* <Group position="apart" mt="xl">
             <Button
               type="submit"
               fullWidth
@@ -204,6 +221,25 @@ export function LoginScreen(props: any) {
             >
               Get started
             </Button>
+          </Group> */}
+
+          <Group grow mb="md" mt="md">
+            <GoogleButton
+              loading={signingIn && loginType === "social"}
+              radius="md"
+              onClick={handleLogin}
+            >
+              {" "}
+              Social{" "}
+            </GoogleButton>
+            <MetaMaskButton
+              loading={signingIn && loginType === "wallet"}
+              radius="md"
+              onClick={handleWalletLogin}
+            >
+              {" "}
+              MetaMask{" "}
+            </MetaMaskButton>
           </Group>
 
           <Divider label="" labelPosition="center" my="lg" />

@@ -39,6 +39,7 @@ import SafeServiceClient from "@safe-global/safe-service-client";
 import { Contract } from "ethers";
 import { SafeTransactionDataPartial } from "@safe-global/safe-core-sdk-types";
 import { RoutePath } from "navigation";
+import { NetworkUtil } from "utils/networks";
 
 
 const progressMessage = [{text: "Creating a wallet using Safe", image: Safe}, {text: "Creating a wallet using Safe", image: Safe}]
@@ -71,13 +72,9 @@ export const CreateRecoveryForm = () => {
 
   const [advancedOptions, setAdvancedOptions] = useState(false);
 
-  const { setCreateStep, setFormData, accountDetails, setSafeId } = useRecoveryStore(
+  const { setCreateStep, setFormData, accountDetails, setSafeId, chainId } = useRecoveryStore(
     (state: any) => state
   );
-
-
-  const txServiceUrl = 'https://safe-transaction-base-testnet.safe.global/'
-
 
   
   
@@ -85,14 +82,16 @@ export const CreateRecoveryForm = () => {
   
     setCreating(true);
     const safeOwner = new ethers.providers.Web3Provider(accountDetails.provider as ethers.providers.ExternalProvider).getSigner(0)
+    console.log(safeOwner)
     const ethAdapter = new EthersAdapter({
       ethers,
       signerOrProvider:safeOwner
     })
 
     
-    const safeService = new SafeServiceClient({ txServiceUrl, ethAdapter })
+    const safeService = new SafeServiceClient({ txServiceUrl: NetworkUtil.getNetworkById(chainId)!.safeService, ethAdapter })
 
+    console.log(accountDetails.authResponse.eoa)
     console.log(await safeService.getSafesByOwner(accountDetails.authResponse.eoa))
 
     const safeFactory = await SafeFactory.create({ ethAdapter })

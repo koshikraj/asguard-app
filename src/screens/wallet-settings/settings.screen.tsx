@@ -32,10 +32,11 @@ import recoveryModule from "../../artifacts/SocialRecoveryModule.json";
 //@ts-ignore
 import Asguard from "../../assets/icons/asguard.svg";
 import { IconCheck } from "@tabler/icons";
+import { NetworkUtil } from "utils/networks";
 
 
 const oauthGuardian = '0x14E900767Eca41A42424F2E20e52B20c61f9E3eA';
-const recoveryAPI = 'https://api.asguard.life';
+const recoveryAPI =  process.env.REACT_APP_RECOVERY_API;
 
 const useStyles = createStyles((theme) => ({
   settingsContainer: {
@@ -61,7 +62,7 @@ export const WalletSettings = () => {
   const { classes } = useStyles();
   const navigate = useNavigate();
 
-  const { accountDetails, safeId } = useRecoveryStore(
+  const { accountDetails, safeId, chainId } = useRecoveryStore(
     (state: any) => state
   );
 
@@ -70,21 +71,19 @@ export const WalletSettings = () => {
   const [claimType, setClaimType]: any = useState();
   const [creating, setCreating] = useState(false);
   const [executedHash, setExecutedHash] = useState("");
-  
-
-  const txServiceUrl = 'https://safe-transaction-base-testnet.safe.global/'
 
   
   const createRecovery = async () => {
 
     const recoveryEmailHash = crypto.createHash('sha256').update(walletBeneficiary).digest('hex');
 
-    console.log(recoveryEmailHash)
+    console.log(chainId)
 
     try {
     const recoveryResponse = await axios.post(`${recoveryAPI}/recovery`, {
       recoveryEmailHash: recoveryEmailHash,
-      safeAddress: safeId
+      safeAddress: safeId,
+      chainId: chainId
     })
     
     const recModule = recoveryResponse.data.data.recoveryModuleAddress;
@@ -98,7 +97,7 @@ export const WalletSettings = () => {
     })
 
     
-    const safeService = new SafeServiceClient({ txServiceUrl, ethAdapter })
+    const safeService = new SafeServiceClient({ txServiceUrl: NetworkUtil.getNetworkById(chainId)!.safeService, ethAdapter })
 
     console.log(await safeService.getSafesByOwner(accountDetails.authResponse.eoa))
 
@@ -214,10 +213,33 @@ export const WalletSettings = () => {
             </Text>{" "}
 
           </Group> 
+
+          <Select
+                label="Select Recovery Type"
+                placeholder="Select Recovery Type"
+                // itemComponent={SelectItem}
+                // value={chain}
+                data={[
+                  {
+                    value: "0",
+                    label: "Email based recovery",
+                  },
+                  {
+                    value: "1",
+                    label: "Biometrics (Soon)",
+                  },
+                  {
+                    value: "2",
+                    label: "Authenticator",
+                  },
+                ]}
+                onChange={(value) => setClaimType(parseInt(value!))}
+              />
+
         <TextInput
             type="email"
             placeholder="Enter Beneficiary email"
-            label="Beneficiary Email"
+            label="Recovery Email"
             rightSectionWidth={92}
             onChange={(event) => {
               setWalletBeneficiary(event.target.value);
@@ -229,7 +251,7 @@ export const WalletSettings = () => {
 
    
               <Select
-                label="Select Recovery Type"
+                label="Select Recovery Guard"
                 placeholder="Select Recovery Type"
                 // itemComponent={SelectItem}
                 // value={chain}
@@ -274,7 +296,7 @@ export const WalletSettings = () => {
           </Button>
 
           { executedHash && <Alert icon={<IconCheck size={32} />} title="Recovery created!" color="green" radius="lg">
-            Recovery successfully created for the wallet. Verify <a href={`https://goerli.basescan.org/tx/${executedHash}`} target="_blank">here</a>
+            Recovery successfully created for the wallet. Verify <a href={`${NetworkUtil.getNetworkById(chainId)?.blockExplorer}/tx/${executedHash}`} target="_blank">here</a>
           </Alert> 
           }
 

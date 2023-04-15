@@ -6,6 +6,7 @@ const useRecoveryStore = create((set) => ({
   roleName: "",
   accountDetails: {},
   safeId: '',
+  chainId: 84531,
 
   setRoleName: (name: string) => {
     set((state: any) => ({
@@ -35,6 +36,12 @@ const useRecoveryStore = create((set) => ({
   setFormData: (data: object) =>
     set((state: any) => ({
       formData: data,
+    })),
+
+  setChainId: (id: number) =>
+    set((state: any) => ({
+      ...state,
+      chainId: id,
     })),
 
   
